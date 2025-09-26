@@ -13,6 +13,8 @@ interface Player {
   skill: number
   wins: number
   losses: number
+  country: string
+  flag: string
 }
 
 interface Match {
@@ -28,6 +30,36 @@ const App = () => {
   const [tournament, setTournament] = useState<Match[]>([])
   const [champion, setChampion] = useState<Player | null>(null)
   const [isSimulating, setIsSimulating] = useState(false)
+  const [showBracket, setShowBracket] = useState(true)
+
+  // Country flags and names
+  const countries = [
+    { name: 'USA', flag: '🇺🇸' },
+    { name: 'Germany', flag: '🇩🇪' },
+    { name: 'France', flag: '🇫🇷' },
+    { name: 'Japan', flag: '🇯🇵' },
+    { name: 'Brazil', flag: '🇧🇷' },
+    { name: 'Canada', flag: '🇨🇦' },
+    { name: 'Australia', flag: '🇦🇺' },
+    { name: 'UK', flag: '🇬🇧' },
+    { name: 'Italy', flag: '🇮🇹' },
+    { name: 'Spain', flag: '🇪🇸' },
+    { name: 'Russia', flag: '🇷🇺' },
+    { name: 'China', flag: '🇨🇳' },
+    { name: 'South Korea', flag: '🇰🇷' },
+    { name: 'Mexico', flag: '🇲🇽' },
+    { name: 'Argentina', flag: '🇦🇷' },
+    { name: 'Netherlands', flag: '🇳🇱' },
+    { name: 'Sweden', flag: '🇸🇪' },
+    { name: 'Norway', flag: '🇳🇴' },
+    { name: 'India', flag: '🇮🇳' },
+    { name: 'Turkey', flag: '🇹🇷' }
+  ]
+
+  const getRandomCountry = () => {
+    const randomIndex = Math.floor(Math.random() * countries.length)
+    return countries[randomIndex]
+  }
 
   const generateRandomName = (isFirstName: boolean = true) => {
     const randomValue = Math.random()
@@ -56,13 +88,16 @@ const App = () => {
   const generatePlayers = () => {
     const newPlayers: Player[] = []
     for (let i = 0; i < 64; i++) {
+      const country = getRandomCountry()
       newPlayers.push({
         id: i,
         firstName: generateRandomName(true),
         lastName: generateRandomName(false),
         skill: Math.floor(Math.random() * 100) + 1,
         wins: 0,
-        losses: 0
+        losses: 0,
+        country: country.name,
+        flag: country.flag
       })
     }
     setPlayers(newPlayers)
@@ -142,13 +177,16 @@ const App = () => {
       // Generate 16 new players to fill the roster
       const newPlayers: Player[] = []
       for (let i = 0; i < 16; i++) {
+        const country = getRandomCountry()
         newPlayers.push({
           id: Math.max(...players.map(p => p.id)) + i + 1, // Ensure unique IDs
           firstName: generateRandomName(true),
           lastName: generateRandomName(false),
           skill: Math.floor(Math.random() * 100) + 1,
           wins: 0,
-          losses: 0
+          losses: 0,
+          country: country.name,
+          flag: country.flag
         })
       }
       
@@ -169,9 +207,107 @@ const App = () => {
     setChampion(null)
   }
 
+  const getBracketStructure = () => {
+    const bracketByRound = tournament.reduce((acc, match) => {
+      if (!acc[match.round]) acc[match.round] = []
+      acc[match.round].push(match)
+      return acc
+    }, {} as Record<string, Match[]>)
+
+    return ["Round of 64", "Round of 32", "Round of 16", "Quarterfinals", "Semifinals", "Finals"]
+      .map(roundName => ({
+        roundName,
+        matches: bracketByRound[roundName] || []
+      }))
+      .filter(round => round.matches.length > 0)
+  }
+
+  const renderBracket = () => {
+    if (tournament.length === 0) return null
+
+    const bracketStructure = getBracketStructure()
+
+    return (
+      <div style={{ 
+        display: 'flex', 
+        overflowX: 'auto', 
+        gap: '20px', 
+        padding: '20px',
+        backgroundColor: '#f5f5f5',
+        borderRadius: '8px'
+      }}>
+        {bracketStructure.map((round, roundIndex) => (
+          <div key={round.roundName} style={{ 
+            minWidth: '220px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+          }}>
+            <h4 style={{ 
+              textAlign: 'center', 
+              margin: '0 0 10px 0',
+              fontSize: '14px',
+              fontWeight: 'bold'
+            }}>
+              {round.roundName}
+            </h4>
+            {round.matches.map((match, matchIndex) => (
+              <div key={matchIndex} style={{
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                backgroundColor: 'white',
+                padding: '8px',
+                fontSize: '11px',
+                minHeight: '70px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '4px'
+                }}>
+                  <span style={{
+                    fontWeight: match.winner.id === match.player1.id ? 'bold' : 'normal',
+                    color: match.winner.id === match.player1.id ? '#2d5a27' : '#666',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span style={{ fontSize: '14px' }}>{match.player1.flag}</span>
+                    {match.player1.firstName} {match.player1.lastName}
+                  </span>
+                  <span style={{ fontSize: '10px' }}>({match.player1.skill})</span>
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span style={{
+                    fontWeight: match.winner.id === match.player2.id ? 'bold' : 'normal',
+                    color: match.winner.id === match.player2.id ? '#2d5a27' : '#666',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span style={{ fontSize: '14px' }}>{match.player2.flag}</span>
+                    {match.player2.firstName} {match.player2.lastName}
+                  </span>
+                  <span style={{ fontSize: '10px' }}>({match.player2.skill})</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div>
-
       <div className="card">
         <h2>Season {season}</h2>
         
@@ -189,29 +325,44 @@ const App = () => {
           >
             {isSimulating ? 'Simulating...' : 'Simulate Tournament'}
           </button>
+          {tournament.length > 0 && (
+            <button onClick={() => setShowBracket(!showBracket)} style={{ marginRight: '10px' }}>
+              {showBracket ? 'Hide Bracket' : 'Show Bracket'}
+            </button>
+          )}
         </div>
 
         {champion && (
           <div style={{ backgroundColor: '#000000ff', padding: '10px', marginBottom: '20px', borderRadius: '5px' }}>
-            <h3>🏆 Season {season - 1} Champion: {champion.firstName} {champion.lastName}</h3>
-            <p>Skill Level: {champion.skill} | Tournament Record: {champion.wins}W - {champion.losses}L</p>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🏆 Season {season - 1} Champion: {champion.flag} {champion.firstName} {champion.lastName}
+            </h3>
+            <p>Country: {champion.country} | Skill Level: {champion.skill} | Tournament Record: {champion.wins}W - {champion.losses}L</p>
           </div>
         )}
 
         {players.length > 0 && (
           <div>
             <h3>Players ({players.length})</h3>
-            <div style={{ overflowY: 'auto', marginBottom: '20px' }}>
+            <div style={{ overflowY: 'auto', marginBottom: '20px', maxHeight: '200px' }}>
               {players?.map(player => (
-                <div key={player.id} style={{ fontSize: '14px', marginBottom: '5px' }}>
-                  {player.firstName} {player.lastName} (Skill: {player.skill})
+                <div key={player.id} style={{ fontSize: '14px', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>{player.flag}</span>
+                  {player.firstName} {player.lastName} ({player.country}) - Skill: {player.skill}
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {tournament.length > 0 && (
+        {tournament.length > 0 && showBracket && (
+          <div>
+            <h3>Tournament Bracket</h3>
+            {renderBracket()}
+          </div>
+        )}
+
+        {tournament.length > 0 && !showBracket && (
           <div>
             <h3>Tournament Results</h3>
             <div style={{ overflowY: 'auto' }}>
@@ -226,8 +377,8 @@ const App = () => {
                   <h4>{round}</h4>
                   {matches.map((match, index) => (
                     <div key={index} style={{ fontSize: '12px', marginBottom: '3px' }}>
-                      {match.player1.firstName} {match.player1.lastName} vs {match.player2.firstName} {match.player2.lastName} 
-                      → <strong>{match.winner.firstName} {match.winner.lastName}</strong>
+                      {match.player1.flag} {match.player1.firstName} {match.player1.lastName} vs {match.player2.flag} {match.player2.firstName} {match.player2.lastName} 
+                      → <strong>{match.winner.flag} {match.winner.firstName} {match.winner.lastName}</strong>
                     </div>
                   ))}
                 </div>
