@@ -122,7 +122,43 @@ const App = () => {
   }
 
   const progressSeason = () => {
-    generatePlayers()
+    if (players.length === 0) {
+      // If no players exist, generate a full new set
+      generatePlayers()
+    } else {
+      // Sort players by skill level (highest to lowest)
+      const sortedPlayers = [...players].sort((a, b) => b.skill - a.skill)
+      
+      // Keep top 48 players (eliminate bottom 16)
+      const survivingPlayers = sortedPlayers.slice(0, 48)
+      
+      // Reset their tournament stats for the new season
+      const resetPlayers = survivingPlayers.map(player => ({
+        ...player,
+        wins: 0,
+        losses: 0
+      }))
+      
+      // Generate 16 new players to fill the roster
+      const newPlayers: Player[] = []
+      for (let i = 0; i < 16; i++) {
+        newPlayers.push({
+          id: Math.max(...players.map(p => p.id)) + i + 1, // Ensure unique IDs
+          firstName: generateRandomName(true),
+          lastName: generateRandomName(false),
+          skill: Math.floor(Math.random() * 100) + 1,
+          wins: 0,
+          losses: 0
+        })
+      }
+      
+      // Combine surviving and new players
+      const allPlayers = [...resetPlayers, ...newPlayers]
+      setPlayers(allPlayers)
+    }
+    
+    setTournament([])
+    setChampion(null)
     setSeason(prev => prev + 1)
   }
 
@@ -135,16 +171,7 @@ const App = () => {
 
   return (
     <div>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Sports Tournament Simulator</h1>
-      
+
       <div className="card">
         <h2>Season {season}</h2>
         
@@ -165,7 +192,7 @@ const App = () => {
         </div>
 
         {champion && (
-          <div style={{ backgroundColor: '#f0f8ff', padding: '10px', marginBottom: '20px', borderRadius: '5px' }}>
+          <div style={{ backgroundColor: '#000000ff', padding: '10px', marginBottom: '20px', borderRadius: '5px' }}>
             <h3>🏆 Season {season - 1} Champion: {champion.firstName} {champion.lastName}</h3>
             <p>Skill Level: {champion.skill} | Tournament Record: {champion.wins}W - {champion.losses}L</p>
           </div>
