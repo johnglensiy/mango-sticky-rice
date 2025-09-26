@@ -201,13 +201,12 @@ const App = () => {
         {players.length > 0 && (
           <div>
             <h3>Players ({players.length})</h3>
-            <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '20px' }}>
-              {players.slice(0, 10).map(player => (
+            <div style={{ overflowY: 'auto', marginBottom: '20px' }}>
+              {players?.map(player => (
                 <div key={player.id} style={{ fontSize: '14px', marginBottom: '5px' }}>
                   {player.firstName} {player.lastName} (Skill: {player.skill})
                 </div>
               ))}
-              {players.length > 10 && <div>... and {players.length - 10} more players</div>}
             </div>
           </div>
         )}
@@ -215,7 +214,7 @@ const App = () => {
         {tournament.length > 0 && (
           <div>
             <h3>Tournament Results</h3>
-            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <div style={{ overflowY: 'auto' }}>
               {Object.entries(
                 tournament.reduce((acc, match) => {
                   if (!acc[match.round]) acc[match.round] = []
