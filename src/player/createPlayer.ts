@@ -9,6 +9,8 @@ export interface Player {
     wins: number
     losses: number
     country: string
+    seed: number
+    isSeeded: boolean
 }
 
 const countries = [
@@ -73,13 +75,15 @@ export const createPlayer = (id: number): Player => {
         skill: Math.floor(Math.random() * 100) + 1,
         wins: 0,
         losses: 0,
-        country: country.name
+        country: country.name,
+        seed: 0,
+        isSeeded: false
     }
 }
 
 export const generatePlayers = () => {
     const newPlayers: Player[] = []
-    
+
     for (let i = 0; i < 64; i++) {
         newPlayers.push(createPlayer(i))       
     }

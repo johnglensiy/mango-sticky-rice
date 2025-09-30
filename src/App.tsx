@@ -1,19 +1,11 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+
 import './App.css'
 
 import gerFirstNames from './data/names/united_states/ger-last.json'
 import gerLastNames from './data/names/united_states/ger-last.json'
-
-interface Player {
-  id: number
-  firstName: string
-  lastName: string
-  skill: number
-  wins: number
-  losses: number
-}
+import { simulateMatch } from './match/simMatch'
+import { type Player } from './player/createPlayer.ts'
 
 interface Match {
   player1: Player
@@ -62,26 +54,24 @@ const App = () => {
         lastName: generateRandomName(false),
         skill: Math.floor(Math.random() * 100) + 1,
         wins: 0,
-        losses: 0
+        losses: 0,
+        country: 'USA',
+        seed: 0,
+        isSeeded: false
       })
     }
+
+    // Sort players by skill descending before setting state
+    newPlayers.sort((a, b) => b.skill - a.skill)
+
+    for (let i = 0; i < 64; i++) {
+      newPlayers[i].seed = i + 1
+      newPlayers[i].isSeeded = i < 32
+    }
+
     setPlayers(newPlayers)
     setTournament([])
     setChampion(null)
-  }
-
-  const simulateMatch = (player1: Player, player2: Player): Player => {
-    // Higher skill = better chance to win, but not guaranteed
-    const player1Chance = player1.skill / (player1.skill + player2.skill)
-    const randomValue = Math.random()
-    
-    const winner = randomValue < player1Chance ? player1 : player2
-    const loser = winner === player1 ? player2 : player1
-    
-    winner.wins++
-    loser.losses++
-    
-    return winner
   }
 
   const simulateTournament = () => {
@@ -135,19 +125,9 @@ const App = () => {
 
   return (
     <div>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Sports Tournament Simulator</h1>
-      
       <div className="card">
         <h2>Season {season}</h2>
-        
+
         <div style={{ marginBottom: '20px' }}>
           <button onClick={startNewGame} style={{ marginRight: '10px' }}>
             Start New Game
@@ -175,9 +155,9 @@ const App = () => {
           <div>
             <h3>Players ({players.length})</h3>
             <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '20px' }}>
-              {players.slice(0, 10).map(player => (
+              {players.map(player => (
                 <div key={player.id} style={{ fontSize: '14px', marginBottom: '5px' }}>
-                  {player.firstName} {player.lastName} (Skill: {player.skill})
+                  {player.isSeeded && `(${player.seed}) `} {player.firstName} {player.lastName} (Skill: {player.skill})
                 </div>
               ))}
               {players.length > 10 && <div>... and {players.length - 10} more players</div>}
@@ -200,7 +180,10 @@ const App = () => {
                   <h4>{round}</h4>
                   {matches.map((match, index) => (
                     <div key={index} style={{ fontSize: '12px', marginBottom: '3px' }}>
-                      {match.player1.firstName} {match.player1.lastName} vs {match.player2.firstName} {match.player2.lastName} 
+                      {match.player1.isSeeded && `(${match.player1.seed}) `} {match.player1.firstName} {match.player1.lastName}
+                      {` vs `}
+                      {match.player2.isSeeded && `(${match.player2.seed}) `} {match.player2.firstName} {match.player2.lastName}
+
                       → <strong>{match.winner.firstName} {match.winner.lastName}</strong>
                     </div>
                   ))}
