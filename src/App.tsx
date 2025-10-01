@@ -5,7 +5,9 @@ import './App.css'
 import gerFirstNames from './data/names/united_states/ger-last.json'
 import gerLastNames from './data/names/united_states/ger-last.json'
 import { simulateMatch } from './match/simMatch'
-import { type Player } from './player/createPlayer.ts'
+import { type Player } from './player/types.ts'
+
+import generateDraw from './tournament/generateDraw.ts'
 
 interface Match {
   player1: Player
@@ -77,9 +79,14 @@ const App = () => {
   const simulateTournament = () => {
     if (players.length !== 64) return
 
+    // Generate draw once
+    const draw = generateDraw(players)
+
     setIsSimulating(true)
     const matches: Match[] = []
-    let currentRound = [...players]
+
+    // Players in current round
+    let currentRound = [...draw]
     const roundNames = ["Round of 64", "Round of 32", "Round of 16", "Quarterfinals", "Semifinals", "Finals"]
     let roundIndex = 0
 

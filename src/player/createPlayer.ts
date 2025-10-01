@@ -1,17 +1,7 @@
 import gerFirstNames from '../data/names/united_states/ger-last.json'
 import gerLastNames from '../data/names/united_states/ger-last.json'
-  
-export interface Player {
-    id: number
-    firstName: string
-    lastName: string
-    skill: number
-    wins: number
-    losses: number
-    country: string
-    seed: number
-    isSeeded: boolean
-}
+
+import { type Player } from './types.ts'
 
 const countries = [
     { name: 'USA', flag: '🇺🇸' },
