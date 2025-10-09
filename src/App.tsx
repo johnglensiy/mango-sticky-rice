@@ -7,6 +7,9 @@ import gerLastNames from './data/names/united_states/ger-last.json'
 import { simulateMatch } from './match/simMatch'
 import { type Player } from './player/types.ts'
 
+import realPlayers from './data/names/realPlayers.json'
+
+
 import generateDraw from './tournament/generateDraw.ts'
 
 interface Match {
@@ -48,30 +51,29 @@ const App = () => {
   }
 
   const generatePlayers = () => {
-    const newPlayers: Player[] = []
-    for (let i = 0; i < 64; i++) {
-      newPlayers.push({
-        id: i,
-        firstName: generateRandomName(true),
-        lastName: generateRandomName(false),
-        skill: Math.floor(Math.random() * 100) + 1,
-        wins: 0,
-        losses: 0,
-        country: 'USA',
-        seed: 0,
-        isSeeded: false
-      })
-    }
+    // Map the real players data to match your Player interface
+    const mappedPlayers: Player[] = realPlayers.players.map((player, index) => ({
+      id: player.id,
+      firstName: player.firstName,
+      lastName: player.lastName,
+      country: player.country,
+      skill: player.skill,
+      wins: 0,        // Initialize for tournament tracking
+      losses: 0,      // Initialize for tournament tracking
+      seed: 0,        // Will be assigned after sorting
+      isSeeded: false // Will be assigned after sorting
+    }));
 
     // Sort players by skill descending before setting state
-    newPlayers.sort((a, b) => b.skill - a.skill)
+    mappedPlayers.sort((a, b) => b.skill - a.skill);
 
-    for (let i = 0; i < 64; i++) {
-      newPlayers[i].seed = i + 1
-      newPlayers[i].isSeeded = i < 32
+    // Assign seeds based on skill ranking
+    for (let i = 0; i < mappedPlayers.length; i++) {
+      mappedPlayers[i].seed = i + 1;
+      mappedPlayers[i].isSeeded = i < 32; // Top 32 are seeded
     }
 
-    setPlayers(newPlayers)
+    setPlayers(mappedPlayers);
     setTournament([])
     setChampion(null)
   }
@@ -175,7 +177,12 @@ const App = () => {
         {tournament.length > 0 && (
           <div>
             <h3>Tournament Results</h3>
-            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <div style={{
+              display: 'flex', 
+              flexDirection: 'row', 
+              overflowY: 'auto',
+              width: '100%'
+              }}>
               {Object.entries(
                 tournament.reduce((acc, match) => {
                   if (!acc[match.round]) acc[match.round] = []
@@ -183,15 +190,41 @@ const App = () => {
                   return acc
                 }, {} as Record<string, Match[]>)
               ).map(([round, matches]) => (
-                <div key={round}>
-                  <h4>{round}</h4>
+                <div key={round} style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-around',
+                  minWidth: '200px',
+                  padding: '10px'
+                }}>
+                  {/* <h4>{round}</h4> */}
                   {matches.map((match, index) => (
-                    <div key={index} style={{ fontSize: '12px', marginBottom: '3px' }}>
-                      {match.player1.isSeeded && `(${match.player1.seed}) `} {match.player1.firstName} {match.player1.lastName}
-                      {` vs `}
-                      {match.player2.isSeeded && `(${match.player2.seed}) `} {match.player2.firstName} {match.player2.lastName}
-
-                      → <strong>{match.winner.firstName} {match.winner.lastName}</strong>
+                    <div key={index} style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      outline: '1px solid black', 
+                      fontSize: '12px', 
+                      marginBottom: '3px',
+                      padding: '4px',
+                    }}>
+                      <div style={{
+                        fontWeight: match.winner.id === match.player1.id ? 'bold' : 'normal',
+                        backgroundColor: match.winner.id === match.player1.id ? '#2d5a27' : 'transparent',
+                        display: 'flex',
+                        justifyContent: 'left'
+                      }}>
+                        {match.player1.isSeeded && match.player1.seed <= 32 && `(${match.player1.seed}) `}
+                        {match.player1.firstName} {match.player1.lastName}
+                      </div>
+                      <div style={{
+                        fontWeight: match.winner.id === match.player2.id ? 'bold' : 'normal',
+                        backgroundColor: match.winner.id === match.player2.id ? '#2d5a27' : 'transparent',
+                        display: 'flex',
+                        justifyContent: 'left'
+                      }}>
+                        {match.player2.isSeeded && match.player2.seed <= 32 && `(${match.player2.seed}) `}
+                        {match.player2.firstName} {match.player2.lastName}
+                      </div>
                     </div>
                   ))}
                 </div>
